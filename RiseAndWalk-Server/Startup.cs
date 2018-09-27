@@ -1,17 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using RiseAndWalk_Server.Entities;
 
@@ -26,14 +21,17 @@ namespace WebApiJwt
         
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddDbContext<IdentyDbContext>();
-            services.AddDbContext<AlarmsDbContext>();
+            services.AddDbContext<IdentyDbContext>(options => 
+                options.UseSqlServer(Configuration.GetConnectionString("IdentyDbConnection")));
+
+            services.AddDbContext<AlarmsDbContext>(options =>
+                options.UseSqlServer(Configuration.GetConnectionString("AlarmsDbConnection")));
             
-            //services.AddIdentity<IdentityUser, IdentityRole>()
-            //    .AddEntityFrameworkStores<ApplicationDbContext>()
-            //    .AddDefaultTokenProviders();
+            services.AddIdentity<IdentityUser, IdentityRole>()
+                .AddEntityFrameworkStores<IdentyDbContext>()
+                .AddDefaultTokenProviders();
             
-            JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear(); // => remove default claims
+            //JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear(); // => remove default claims
             services
                 .AddAuthentication(options =>
                 {
@@ -58,7 +56,8 @@ namespace WebApiJwt
             services.AddMvc();
         }
         
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, IdentyDbContext dbContext)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, 
+            IdentyDbContext dbContext, AlarmsDbContext alarmDbContext)
         {
             if (env.IsDevelopment())
                 app.UseDeveloperExceptionPage();
@@ -67,6 +66,7 @@ namespace WebApiJwt
             app.UseMvc();
             
             dbContext.Database.EnsureCreated();
+            alarmDbContext.Database.EnsureCreated();
         }
     }
 }

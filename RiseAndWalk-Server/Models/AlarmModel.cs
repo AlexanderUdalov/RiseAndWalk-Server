@@ -5,7 +5,10 @@ using System.Threading.Tasks;
 
 namespace RiseAndWalk_Server.Models
 {
-    public class UserAlarmsModel
+    public class AlarmModel
     {
+        public DateTime AlarmTime;
+        public bool RepeatEveryWeek;
+        public string Description;
     }
 }

@@ -1,13 +1,13 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using RiseAndWalk_Server.Models;
+using System;
 
 namespace RiseAndWalk_Server.Entities
 {
     public class AlarmsDbContext : DbContext
     {
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            optionsBuilder.UseSqlServer(
-                "Server=(localdb)\\mssqllocaldb;Database=alarms_database;Trusted_Connection=True;");
-        }
+        public DbSet<AlarmEntity> Alarms { get; set; }
+
+        public AlarmsDbContext(DbContextOptions<AlarmsDbContext> options) : base(options) { }
     }
 }

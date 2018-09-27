@@ -1,19 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
+using RiseAndWalk_Server.ExceptionFilters;
 using RiseAndWalk_Server.Models;
 
-namespace WebApiJwt.Controllers
+namespace RiseAndWalk_Server.Controllers
 {
     [Route("[controller]/[action]")]
     public class AccountController : Controller
@@ -43,16 +42,16 @@ namespace WebApiJwt.Controllers
                 var appUser = _userManager.Users.SingleOrDefault(r => r.Email == model.Email);
                 return await GenerateJwtToken(model.Email, appUser);
             }
-            
-            throw new ApplicationException("INVALID_LOGIN_ATTEMPT");
+            return BadRequest(model);
         }
-       
+
+        [InternalServerExceptionFilter]
         [HttpPost]
         public async Task<object> Register([FromBody] RegisterModel model)
         {
             var user = new IdentityUser
             {
-                UserName = model.Email, 
+                UserName = model.Email,
                 Email = model.Email
             };
             var result = await _userManager.CreateAsync(user, model.Password);
@@ -62,8 +61,14 @@ namespace WebApiJwt.Controllers
                 await _signInManager.SignInAsync(user, false);
                 return await GenerateJwtToken(model.Email, user);
             }
-            
-            throw new ApplicationException("UNKNOWN_ERROR");
+
+            return Conflict(model);
+
+            //string errors = "";
+            //foreach (var error in result.Errors)
+            //    errors += error.Code + ": " + error.Description + "\n";
+
+            //throw new Exception(errors);
         }
 
         private async Task<object> GenerateJwtToken(string email, IdentityUser user)

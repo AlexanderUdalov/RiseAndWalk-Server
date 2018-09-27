@@ -7,5 +7,7 @@ namespace RiseAndWalk_Server.Models
 {
     public class RegisterModel
     {
+        public string Email;
+        public string Password;
     }
 }
