@@ -10,15 +10,14 @@ namespace RiseAndWalk_Server.Entities
         [Key]
         public Guid AlarmId { get; set; }
 
-        public string UserName { get; set; }
-
-        [Column("alarm_time")]
+        [Required]
+        public string UserGuid { get; set; }
+        
+        [Required]
         public DateTime AlarmTime { get; set; }
-
-        [Column("repeat_every_week")]
+        
         public bool RepeatEveryWeek { get; set; }
-
-        [Column("description")]
+        
         public string Description { get; set; }
     }
 }

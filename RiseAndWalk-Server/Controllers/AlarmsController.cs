@@ -4,10 +4,8 @@ using RiseAndWalk_Server.Entities;
 using RiseAndWalk_Server.ExceptionFilters;
 using RiseAndWalk_Server.Models;
 using System;
-using System.Collections.Generic;
-using System.Data.Entity;
 using System.Linq;
-using System.Threading.Tasks;
+using System.Security.Claims;
 
 namespace RiseAndWalk_Server.Controllers
 {
@@ -28,7 +26,9 @@ namespace RiseAndWalk_Server.Controllers
         [HttpGet]
         public ActionResult Get()
         {
-            var userAlarms = _db.Alarms.Where(x => x.UserName == User.Identity.Name).ToList();
+            var userAlarms = _db.Alarms
+                .Where(x => x.UserGuid == User.FindFirst(ClaimTypes.Email).Value)
+                .ToList();
             return new JsonResult(userAlarms);
         }
 
@@ -39,9 +39,10 @@ namespace RiseAndWalk_Server.Controllers
         {
             if (ModelState.IsValid)
             {
+                Console.WriteLine(HttpContext.User.Identity.Name);
                 var entity = new AlarmEntity()
                 {
-                    UserName = User.Identity.Name,
+                    UserGuid = User.FindFirst(ClaimTypes.Email).Value,
                     AlarmTime = model.AlarmTime,
                     RepeatEveryWeek = model.RepeatEveryWeek,
                     Description = model.Description
@@ -52,20 +53,38 @@ namespace RiseAndWalk_Server.Controllers
             }
             else BadRequest(ModelState);
         }
-        
 
+        //TODO: проверка совпадения User.Name с именеим в Alarm
         [InternalServerExceptionFilter]
-        [HttpPut("{id}")]
-        public void Put(int id, [FromBody]string value)
+        [HttpPut("{id=Guid}")]
+        public void Put(Guid id, [FromBody]AlarmModel model)
         {
-            throw new NotImplementedException();
+            var entity = _db.Alarms.FirstOrDefault(x => x.AlarmId == id);
+            entity.UserGuid = User.FindFirst(ClaimTypes.Email).Value;
+            entity.AlarmTime = model.AlarmTime;
+            entity.RepeatEveryWeek = model.RepeatEveryWeek;
+            entity.Description = model.Description;
+
+
+            _db.Update(entity);
+            _db.SaveChanges();
+        }
+
+        //TODO: проверка совпадения User.Name с именеим в Alarm
+        [InternalServerExceptionFilter]
+        [HttpDelete("{id=Guid}")]
+        public void Delete(Guid id)
+        {
+            _db.Remove(_db.Alarms.FirstOrDefault(x => x.AlarmId == id));
+            _db.SaveChanges();
         }
 
         [InternalServerExceptionFilter]
-        [HttpDelete("{id}")]
-        public void Delete(int id)
+        [HttpDelete]
+        public void Delete()
         {
-            throw new NotImplementedException();
+            _db.Remove(_db.Alarms.FirstOrDefault(x => x.UserGuid == User.FindFirst(ClaimTypes.Email).Value));
+            _db.SaveChanges();
         }
     }
 }
