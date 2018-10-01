@@ -32,20 +32,28 @@ namespace RiseAndWalk_Server.Controllers
             _configuration =     configuration;
         }
         
+        [ValidationExceptionFilter]
         [HttpPost]
         public async Task<object> Login([FromBody] LoginModel model)
         {
             var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, false, false);
-            
+
             if (result.Succeeded)
             {
                 var appUser = _userManager.Users.SingleOrDefault(r => r.Email == model.Email);
                 return await GenerateJwtToken(model.Email, appUser);
             }
-            return BadRequest(model);
+
+            if (result.RequiresTwoFactor)
+                throw new ValidationException(ValidationErrorType.RequiresTwoFactor);
+
+            if (result.IsNotAllowed)
+                throw new ValidationException(ValidationErrorType.LoginNotAllowed);
+
+            throw new ValidationException(ValidationErrorType.UserNotExist);
         }
 
-        [InternalServerExceptionFilter]
+        [ValidationExceptionFilter]
         [HttpPost]
         public async Task<object> Register([FromBody] RegisterModel model)
         {
@@ -62,13 +70,7 @@ namespace RiseAndWalk_Server.Controllers
                 return await GenerateJwtToken(model.Email, user);
             }
 
-            return Conflict(model);
-
-            //string errors = "";
-            //foreach (var error in result.Errors)
-            //    errors += error.Code + ": " + error.Description + "\n";
-
-            //throw new Exception(errors);
+            throw new ValidationException(result.Errors.ElementAt(0).Code);
         }
 
         private async Task<object> GenerateJwtToken(string email, IdentityUser user)
