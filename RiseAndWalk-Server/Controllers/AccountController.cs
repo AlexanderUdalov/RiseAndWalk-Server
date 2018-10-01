@@ -14,7 +14,7 @@ using RiseAndWalk_Server.Models;
 
 namespace RiseAndWalk_Server.Controllers
 {
-    [Route("[controller]/[action]")]
+    [Route("api/[controller]/[action]")]
     public class AccountController : Controller
     {
         private readonly SignInManager<IdentityUser> _signInManager;

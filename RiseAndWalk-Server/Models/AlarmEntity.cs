@@ -1,7 +1,5 @@
-﻿using RiseAndWalk_Server.Models;
-using System;
+﻿using System;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace RiseAndWalk_Server.Entities
 {
@@ -16,7 +14,7 @@ namespace RiseAndWalk_Server.Entities
         [Required]
         public DateTime AlarmTime { get; set; }
         
-        public bool RepeatEveryWeek { get; set; }
+        public bool? RepeatEveryWeek { get; set; }
         
         public string Description { get; set; }
     }
